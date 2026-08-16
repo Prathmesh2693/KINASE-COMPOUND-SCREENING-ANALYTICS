@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Kinase–Compound Screening Analytics — Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-0:#080d17;
+    --bg-1:#0e1526;
+    --panel:#101a30;
+    --panel-2:#0c1424;
+    --line:#1f2c47;
+    --line-soft:#182238;
+    --teal:#31e6c4;
+    --teal-dim:#1c8f7d;
+    --amber:#ff9d52;
+    --amber-dim:#a5652f;
+    --text-hi:#eef3fb;
+    --text-mid:#9fb0cc;
+    --text-lo:#5f6f8f;
+    --well:#0a1120;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--bg-0);}
+  body{
+    font-family:'IBM Plex Sans',sans-serif;
+    color:var(--text-hi);
+    background:
+      radial-gradient(1100px 480px at 85% -8%, rgba(49,230,196,0.10), transparent 60%),
+      radial-gradient(900px 420px at 8% 105%, rgba(255,157,82,0.07), transparent 55%),
+      var(--bg-0);
+  }
+  .sheet{
+    width:1440px;
+    margin:0 auto;
+    padding:34px 46px 30px;
+  }
+  .mono{ font-family:'IBM Plex Mono',monospace; }
+  .display{ font-family:'Space Grotesk',sans-serif; }
+
+  /* ---------- Header ---------- */
+  header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    border-bottom:1px solid var(--line);
+    padding-bottom:18px;
+    margin-bottom:20px;
+    position:relative;
+  }
+  .brand-eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    letter-spacing:.24em;
+    color:var(--teal);
+    text-transform:uppercase;
+    margin-bottom:8px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .brand-eyebrow .dot{width:6px;height:6px;border-radius:50%;background:var(--teal);box-shadow:0 0 10px var(--teal);}
+  h1{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:700;
+    font-size:34px;
+    letter-spacing:-0.01em;
+    margin:0 0 6px 0;
+    color:var(--text-hi);
+  }
+  h1 span{color:var(--teal);}
+  .subhead{ color:var(--text-mid); font-size:13.5px; max-width:640px; line-height:1.5; }
+  .byline{
+    text-align:right;
+    font-size:12px;
+    color:var(--text-lo);
+    line-height:1.6;
+  }
+  .byline b{ color:var(--text-mid); font-weight:600; }
+  .plate{
+    display:grid;
+    grid-template-columns:repeat(12,5px);
+    grid-auto-rows:5px;
+    gap:3px;
+    position:absolute;
+    right:0;
+    top:-6px;
+    opacity:.55;
+  }
+  .plate i{ width:5px;height:5px;border-radius:50%; background:var(--line); }
+  .plate i.hit{ background:var(--teal); box-shadow:0 0 5px var(--teal);}
+  .plate i.hit2{ background:var(--amber); box-shadow:0 0 5px var(--amber);}
+
+  /* ---------- KPI strip ---------- */
+  .kpi-row{
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    gap:14px;
+    margin-bottom:18px;
+  }
+  .kpi{
+    background:linear-gradient(180deg, var(--panel), var(--panel-2));
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:14px 16px 12px;
+    position:relative;
+    overflow:hidden;
+  }
+  .kpi::after{
+    content:"";
+    position:absolute; left:0; right:0; bottom:0; height:2px;
+    background:linear-gradient(90deg, var(--teal), transparent);
+  }
+  .kpi .lbl{ font-size:10.5px; letter-spacing:.09em; text-transform:uppercase; color:var(--text-lo); margin-bottom:8px; }
+  .kpi .val{ font-family:'Space Grotesk',sans-serif; font-size:27px; font-weight:700; color:var(--text-hi); line-height:1; }
+  .kpi .val small{ font-size:13px; color:var(--teal); font-weight:600; margin-left:2px;}
+  .kpi .sub{ font-size:11px; color:var(--text-mid); margin-top:6px; }
+  .kpi.accent .val{ color:var(--amber); }
+  .kpi.accent::after{ background:linear-gradient(90deg, var(--amber), transparent); }
+
+  /* ---------- Main grid ---------- */
+  .main-grid{
+    display:grid;
+    grid-template-columns:1.28fr 1fr;
+    gap:16px;
+    margin-bottom:16px;
+  }
+  .panel{
+    background:linear-gradient(180deg, var(--panel), var(--panel-2));
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:18px 20px 16px;
+  }
+  .panel h2{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:14px;
+    margin:0 0 3px 0;
+    color:var(--text-hi);
+    display:flex; align-items:center; gap:8px;
+  }
+  .panel h2::before{
+    content:"";
+    width:7px;height:7px;border-radius:2px;
+    background:var(--teal);
+    display:inline-block;
+    transform:rotate(45deg);
+  }
+  .panel .desc{ font-size:11px; color:var(--text-lo); margin-bottom:14px; }
+
+  /* bar chart (top kinases) */
+  .bars{ display:flex; flex-direction:column; gap:7px; margin-top:4px;}
+  .bar-row{ display:grid; grid-template-columns:78px 1fr 34px; align-items:center; gap:10px; }
+  .bar-row .name{ font-size:11.5px; color:var(--text-mid); font-family:'IBM Plex Mono',monospace; }
+  .bar-track{ height:14px; background:var(--well); border-radius:4px; overflow:hidden; border:1px solid var(--line-soft); }
+  .bar-fill{ height:100%; border-radius:3px; background:linear-gradient(90deg, var(--teal-dim), var(--teal)); }
+  .bar-row .count{ font-size:11.5px; color:var(--text-hi); font-family:'IBM Plex Mono',monospace; text-align:right; }
+
+  /* funnel */
+  .funnel{ display:flex; flex-direction:column; gap:10px; margin-top:6px; }
+  .funnel-step{ display:grid; grid-template-columns:1fr auto; align-items:center; gap:10px; }
+  .funnel-bar{
+    height:30px; border-radius:6px;
+    display:flex; align-items:center; padding:0 12px;
+    font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--bg-0); font-weight:600;
+    background:linear-gradient(90deg, var(--teal), var(--teal-dim));
+  }
+  .funnel-step:nth-child(3) .funnel-bar{ background:linear-gradient(90deg, var(--amber), var(--amber-dim)); color:var(--bg-0);}
+  .funnel-step:nth-child(4) .funnel-bar{ background:linear-gradient(90deg,#ffcf9e,var(--amber)); color:var(--bg-0);}
+  .funnel-lbl{ font-size:11px; color:var(--text-mid); white-space:nowrap; text-align:right; }
+  .funnel-lbl b{ color:var(--text-hi); font-family:'IBM Plex Mono',monospace; font-size:13px; display:block; }
+
+  /* ---------- Lower grid ---------- */
+  .lower-grid{
+    display:grid;
+    grid-template-columns:1.15fr 0.85fr;
+    gap:16px;
+  }
+  table{ width:100%; border-collapse:collapse; margin-top:6px; }
+  th{
+    font-size:9.5px; text-transform:uppercase; letter-spacing:.06em;
+    color:var(--text-lo); text-align:left; padding:5px 8px;
+    border-bottom:1px solid var(--line);
+  }
+  td{
+    font-size:11.5px; padding:6px 8px; border-bottom:1px solid var(--line-soft);
+    color:var(--text-mid);
+  }
+  td.mono, th.num{ font-family:'IBM Plex Mono',monospace; }
+  tr:last-child td{ border-bottom:none; }
+  td.cname{ color:var(--text-hi); font-weight:500;}
+  .pill{
+    display:inline-block; padding:2px 7px; border-radius:20px;
+    font-family:'IBM Plex Mono',monospace; font-size:10px;
+    background:rgba(49,230,196,0.12); color:var(--teal); border:1px solid rgba(49,230,196,0.3);
+  }
+
+  .insight-list{ display:flex; flex-direction:column; gap:12px; margin-top:4px;}
+  .insight{ padding-left:14px; border-left:2px solid var(--teal-dim); }
+  .insight .h{ font-size:12px; font-weight:600; color:var(--text-hi); margin-bottom:3px; font-family:'Space Grotesk',sans-serif;}
+  .insight .b{ font-size:11.5px; color:var(--text-mid); line-height:1.5; }
+  .insight .b b{ color:var(--amber); font-family:'IBM Plex Mono',monospace; font-weight:600; }
+  .insight.warn{ border-left-color:var(--amber-dim); }
+
+  footer{
+    margin-top:18px;
+    padding-top:12px;
+    border-top:1px solid var(--line);
+    display:flex; justify-content:space-between; align-items:center;
+    font-size:10.5px; color:var(--text-lo);
+  }
+  footer .disclaimer{ max-width:900px; line-height:1.5; }
+  footer .disclaimer b{ color:var(--text-mid); }
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <header>
+    <div>
+      <div class="brand-eyebrow"><span class="dot"></span>Screening Analytics · Executive Overview</div>
+      <h1>Kinase–Compound <span>Screening Dashboard</span></h1>
+      <div class="subhead">A data-driven view of compound prioritization, kinase profiling, and selectivity across the full screening library — from raw interactions down to high-affinity, target-selective hits.</div>
+    </div>
+    <div class="byline">
+      <b>Prathmesh Pawar</b> · 25M0143<br>
+      M.Tech Biomedical Engineering<br>
+      Biosciences &amp; Bioengineering Dept., IIT Bombay
+    </div>
+    <div class="plate" id="plate"></div>
+  </header>
+
+  <!-- KPI STRIP -->
+  <div class="kpi-row">
+    <div class="kpi">
+      <div class="lbl">Kinases Screened</div>
+      <div class="val">229</div>
+      <div class="sub">full target panel, master dataset</div>
+    </div>
+    <div class="kpi">
+      <div class="lbl">Unique Compounds</div>
+      <div class="val">1,497</div>
+      <div class="sub">screened across the library</div>
+    </div>
+    <div class="kpi">
+      <div class="lbl">Screening Interactions</div>
+      <div class="val">350,062</div>
+      <div class="sub">compound–kinase binding/docking records</div>
+    </div>
+    <div class="kpi accent">
+      <div class="lbl">High‑Affinity Hits</div>
+      <div class="val">41<small>docking ≤ −10</small></div>
+      <div class="sub">curated cutoff subset, 9 kinases</div>
+    </div>
+    <div class="kpi">
+      <div class="lbl">Most Promiscuous Compound</div>
+      <div class="val" style="font-size:20px;">#91745</div>
+      <div class="sub">hits 24 distinct kinases</div>
+    </div>
+  </div>
+
+  <!-- MAIN GRID -->
+  <div class="main-grid">
+    <div class="panel">
+      <h2>Top Kinases by Compound Hits</h2>
+      <div class="desc">Curated set (47 kinases · 730 interactions) — kinases with the broadest compound engagement</div>
+      <div class="bars" id="bars"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Prioritization Funnel</h2>
+      <div class="desc">Narrowing the raw library to a defensible shortlist</div>
+      <div class="funnel">
+        <div class="funnel-step">
+          <div class="funnel-bar" style="width:100%;">350,062 interactions</div>
+          <div class="funnel-lbl">Raw library<b>229 kinases</b></div>
+        </div>
+        <div class="funnel-step">
+          <div class="funnel-bar" style="width:64%;">730 curated interactions</div>
+          <div class="funnel-lbl">Curated subset<b>47 kinases · 319 cmpds</b></div>
+        </div>
+        <div class="funnel-step">
+          <div class="funnel-bar" style="width:40%; white-space:nowrap;">41 high‑affinity hits</div>
+          <div class="funnel-lbl">Docking ≤ −10<b>9 kinases</b></div>
+        </div>
+        <div class="funnel-step">
+          <div class="funnel-bar" style="width:32%; white-space:nowrap;">28 selective hits</div>
+          <div class="funnel-lbl">SI worst &lt; 1<b>target‑preferring</b></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOWER GRID -->
+  <div class="lower-grid">
+    <div class="panel">
+      <h2>Top High‑Affinity Hits</h2>
+      <div class="desc">Best docking scores from the −10 cutoff subset, ranked strongest first</div>
+      <table>
+        <thead>
+          <tr><th>Compound</th><th>Kinase</th><th class="num">Docking</th><th class="num">Binding</th><th class="num">SI worst</th></tr>
+        </thead>
+        <tbody id="hits-body"></tbody>
+      </table>
+    </div>
+
+    <div class="panel">
+      <h2>Analytical Insights</h2>
+      <div class="desc">Key take‑aways behind the prioritization framework</div>
+      <div class="insight-list">
+        <div class="insight">
+          <div class="h">Binding and docking are complementary, not redundant</div>
+          <div class="b">Across the curated set, binding and docking scores show <b>near‑zero correlation</b> (Pearson r ≈ −0.06). A compound strong on one metric isn't reliably strong on the other — both are needed for a defensible score.</div>
+        </div>
+        <div class="insight">
+          <div class="h">CLK1 dominates the interaction landscape</div>
+          <div class="b">CLK1 alone accounts for <b>71 compounds</b> and 12 of the 41 high‑affinity hits — the single largest node in the network, followed by DYRK1A (61) and HIPK2 (57).</div>
+        </div>
+        <div class="insight warn">
+          <div class="h">Strong ≠ selective</div>
+          <div class="b">Of the 41 high‑affinity hits, <b>28 (68%)</b> show SI worst &lt; 1, indicating genuine target preference — the remaining 13 bind broadly and warrant off‑target scrutiny before further prioritization.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="disclaimer"><b>Note:</b> figures reflect an analytical prioritization framework (binding, docking, and selectivity‑index thresholds). Rankings are screening‑stage evidence, not proof of therapeutic efficacy or experimental validation.</div>
+    <div>Kinase–Compound Screening Analytics · Portfolio Project</div>
+  </footer>
+
+</div>
+
+<script>
+  // top kinases data
+  const kinases = [
+    ["CLK1", 71], ["DYRK1A", 61], ["HIPK2", 57], ["CLK4", 53],
+    ["ABL1", 42], ["DDR1", 41], ["GAK", 33], ["BMPR2", 27],
+    ["CDK7", 24], ["ULK1", 24]
+  ];
+  const max = kinases[0][1];
+  const barsEl = document.getElementById('bars');
+  kinases.forEach(([name, count]) => {
+    const row = document.createElement('div');
+    row.className = 'bar-row';
+    row.innerHTML = `
+      <div class="name">${name}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${(count/max*100).toFixed(0)}%"></div></div>
+      <div class="count">${count}</div>`;
+    barsEl.appendChild(row);
+  });
+
+  // high affinity hits table (sorted strongest docking first)
+  const hits = [
+    ["Flocoumafen", "ABL1", -11.351, 17.05, 0.79],
+    ["Cinmethylin", "CLK1", -11.328, 15.75, 0.61],
+    ["Piperflanilide", "HCK", -11.437, 19.46, 0.83],
+    ["Picolinafen", "CLK1", -11.166, 17.68, 0.55],
+    ["Cinmethylin", "CLK4", -11.032, 17.58, 0.55],
+    ["Penfluron", "HCK", -10.971, 18.38, 0.64],
+    ["Cinmethylin", "HCK", -10.936, 15.32, 0.63],
+    ["Oxathiapiprolin", "CLK4", -10.934, 18.67, 0.61],
+  ].sort((a,b)=>a[2]-b[2]);
+  const tbody = document.getElementById('hits-body');
+  hits.forEach(([c,k,d,b,si])=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td class="cname">${c}</td><td><span class="pill">${k}</span></td>
+      <td class="mono">${d.toFixed(2)}</td><td class="mono">${b.toFixed(1)}</td><td class="mono">${si.toFixed(2)}</td>`;
+    tbody.appendChild(tr);
+  });
+
+  // decorative assay plate dots (12x6)
+  const plate = document.getElementById('plate');
+  const hitCells = new Set([3,14,22,29,41,50,55,63]);
+  const hit2Cells = new Set([8,19,33,47,58]);
+  for(let i=0;i<72;i++){
+    const d = document.createElement('i');
+    if(hitCells.has(i)) d.className='hit';
+    else if(hit2Cells.has(i)) d.className='hit2';
+    plate.appendChild(d);
+  }
+</script>
+</body>
+</html>
